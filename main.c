@@ -64,23 +64,23 @@ void affichage(liste list_pathway) {
 			     
 void ouvrir(liste list_pathway, char *nom) {
     FILE *fichier;
-    ptr_pathway item;
-    char *_nom;
-    int poids;
+    char ligne[256];  // buffer pour lire chaque ligne
     fichier = fopen(nom, "r");
-    if (fichier == NULL)
+    if (fichier == NULL) {
         printf("Mauvais fichier\n");
-    else {
-        do {
-            item = creerpathway();
-            ouvrir_voie(item, fichier);
-            ajouter(list_pathway,item);
-        }
-        while (fgetc(fichier) != EOF);
-        fclose(fichier);
+        return;
     }
+
+    while (fgets(ligne, sizeof(ligne), fichier) != NULL) {
+        ptr_pathway item = creerpathway();
+        ouvrir_voie(item, ligne);  // ouvrir_voie modifiée pour lire depuis ligne
+        ajouter(list_pathway, item);
+    }
+
+    fclose(fichier);
     printf("Chargement terminé\n");
 }
+
 
 
 void sauvegarder(liste list_pathway) {
