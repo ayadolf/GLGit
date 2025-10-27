@@ -8,19 +8,19 @@ struct enzyme {
     int poids;
 };
 
-// Crée une enzyme avec nom et poids
-ptr_enzyme creer_enzyme(char *_nom, int _poids) {
-    ptr_enzyme enz = (ptr_enzyme) malloc(sizeof(struct enzyme));
-    if (!enz) { perror("malloc enz"); exit(1); }
+// Création d'une enzyme
+ptr_enzyme creer_enzyme(const char *_nom, int _poids) {
+    ptr_enzyme enz = malloc(sizeof(struct enzyme));
+    if (!enz) { perror("malloc enz"); exit(EXIT_FAILURE); }
 
-    enz->nom = strdup(_nom);  // allocation + copie
-    if (!enz->nom) { perror("strdup"); exit(1); }
+    enz->nom = strdup(_nom); // allocation + copie automatique
+    if (!enz->nom) { perror("strdup"); exit(EXIT_FAILURE); }
 
     enz->poids = _poids;
     return enz;
 }
 
-// Saisie manuelle de l'enzyme
+// Saisie utilisateur
 ptr_enzyme saisie_enzyme() {
     char nom[30];
     int poids;
@@ -33,24 +33,33 @@ ptr_enzyme saisie_enzyme() {
     return creer_enzyme(nom, poids);
 }
 
-// Lecture d'une enzyme depuis un fichier
+// Lecture depuis un fichier
 ptr_enzyme lire_enzyme_fichier(FILE *f) {
     char nom[30];
     int poids;
+
     if (fscanf(f, "%29s %d", nom, &poids) != 2) {
-        return NULL; // fin de fichier ou erreur de lecture
+        return NULL; // Fin du fichier ou erreur
     }
     return creer_enzyme(nom, poids);
 }
 
-// Affiche l'enzyme
+// Affichage
 void affiche(ptr_enzyme enz) {
     if (!enz) return;
     printf("Enzyme: %s, poids : %d\n", enz->nom, enz->poids);
 }
 
-// Sauvegarde l'enzyme dans un fichier
-void sauvegarde(ptr_enzyme enz, FILE* out) {
+// Sauvegarde dans fichier
+void sauvegarde(ptr_enzyme enz, FILE *out) {
     if (!enz || !out) return;
     fprintf(out, "%s %d\n", enz->nom, enz->poids);
+}
+
+// Libération mémoire
+void liberer_enzyme(ptr_enzyme enz) {
+    if (enz) {
+        free(enz->nom);
+        free(enz);
+    }
 }

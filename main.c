@@ -3,106 +3,118 @@
 #include "enzyme.h"
 #include "pathway.h"
 #include "liste.h"
-#define MAX 3
 
 void afficheMenu();
 void saisie(liste);
 void affichage(liste);
-void ouvrir(liste, char *);
+void ouvrir(liste, const char *);
 void sauvegarder(liste);
 
-static int cpt=0;
-
-int main(int argc, char *argv[]) {
+int main() {
     liste list_pathway = creerliste();
     int reponse;
-    char *nom_fichier;
-    nom_fichier=(char *)malloc(sizeof(char)*30);
-    while(1) {
+    char nom_fichier[100];
+
+    while (1) {
         afficheMenu();
+        printf("Votre choix : ");
         scanf("%d", &reponse);
+
         switch (reponse) {
-        case 1: {saisie(list_pathway);break;}
-        case 2: {affichage(list_pathway);break; }
-        case 3: {sauvegarder(list_pathway);break;}
-        case 4: {
-            printf("Quel fichier voulez-vous ouvrir?\n");
-            scanf("%s",nom_fichier);
+        case 1:
+            saisie(list_pathway);
+            break;
+        case 2:
+            affichage(list_pathway);
+            break;
+        case 3:
+            sauvegarder(list_pathway);
+            break;
+        case 4:
+            printf("Nom du fichier à ouvrir : ");
+            scanf("%99s", nom_fichier);
             ouvrir(list_pathway, nom_fichier);
             break;
-        }
-        case 5: {list_pathway=supprimer(list_pathway);break;}
-        case 0: {return 0;}
+        case 5:
+            list_pathway = supprimer(list_pathway);
+            break;
+        case 0:
+            printf("Fin du programme.\n");
+            return 0;
+        default:
+            printf("Choix invalide.\n");
         }
     }
-    return 0;
 }
-
 
 void saisie(liste list_pathway) {
-    int i;
-    char *nom;
-    int poids;
     int nombre;
-    printf("Combien de voies?\n");
+    printf("Combien de voies ? ");
     scanf("%d", &nombre);
-    for (i=0; i<nombre; i++) {
-        ptr_pathway item=creerpathway();
+
+    for (int i = 0; i < nombre; i++) {
+        ptr_pathway item = creerpathway();
         saisie_voie(item);
-        ajouter(list_pathway,item);
-        cpt++;
+        ajouter(list_pathway, item);
     }
 }
-    
+
 void affichage(liste list_pathway) {
-    int i;
-    if (case_vide(list_pathway)) printf("Le tableau est vide, veuillez le remplir.\n");
-    else {
+    if (case_vide(list_pathway)) {
+        printf("Aucune voie à afficher.\n");
+    } else {
         afficherliste(list_pathway);
     }
 }
-			     
-void ouvrir(liste list_pathway, char *nom) {
-    FILE *fichier;
-    char ligne[256];  // buffer pour lire chaque ligne
-    fichier = fopen(nom, "r");
-    if (fichier == NULL) {
-        printf("Mauvais fichier\n");
+
+void ouvrir(liste list_pathway, const char *nom) {
+    FILE *fichier = fopen(nom, "r");
+    if (!fichier) {
+        perror("Erreur ouverture fichier");
         return;
     }
 
-    while (fgets(ligne, sizeof(ligne), fichier) != NULL) {
+    while (!feof(fichier)) {
         ptr_pathway item = creerpathway();
-        ouvrir_voie(item, ligne);  // ouvrir_voie modifiée pour lire depuis ligne
+        if (!ouvrir_voie(item, fichier)) {
+            liberer_pathway(item);
+            break;
+        }
         ajouter(list_pathway, item);
     }
 
     fclose(fichier);
-    printf("Chargement terminé\n");
+    printf("Chargement terminé ✅\n");
 }
 
-
-
 void sauvegarder(liste list_pathway) {
-    liste tmp = list_pathway;
-    FILE *out;
-    int i;
-    out=fopen("resul","w");
-    if (case_vide(list_pathway)) printf("Le tableau est vide, veuillez le remplir.\n");
-    else {
-        while (!case_vide(tmp)) {
-            sauvegarder_voie(retourcontenu(tmp), out);
-            tmp=case_suivante(tmp);
-        }
+    if (case_vide(list_pathway)) {
+        printf("Rien à sauvegarder.\n");
+        return;
     }
+
+    FILE *out = fopen("resul.txt", "w");
+    if (!out) {
+        perror("Erreur création fichier");
+        return;
+    }
+
+    liste tmp = list_pathway;
+    while (!case_vide(tmp)) {
+        sauvegarder_voie(retourcontenu(tmp), out);
+        tmp = case_suivante(tmp);
+    }
+
     fclose(out);
+    printf("Sauvegarde réalisée ✅ (resul.txt)\n");
 }
 
 void afficheMenu() {
-    printf("Programme Enzyme\n");
-    printf("1. Entrer informations\n");
+    printf("\n===== Programme Enzyme =====\n");
+    printf("1. Saisir informations\n");
     printf("2. Afficher\n");
     printf("3. Sauvegarder\n");
     printf("4. Ouvrir un fichier\n");
-    printf("5. Supprimer\n");
+    printf("5. Supprimer voie\n");
+    printf("0. Quitter\n");
 }
